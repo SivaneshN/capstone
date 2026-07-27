@@ -18,6 +18,28 @@ variable "dynamodb_table_name" {
   type = string
 }
 
+variable "alarm_email" {
+  description = "Email address to notify when the fetcher or DynamoDB alarms fire. Leave null to skip SNS wiring."
+  type        = string
+  default     = null
+}
+
+locals {
+  alarm_actions = var.alarm_email != null ? [aws_sns_topic.alarms[0].arn] : []
+}
+
+resource "aws_sns_topic" "alarms" {
+  count = var.alarm_email != null ? 1 : 0
+  name  = "${var.project_name}-alarms"
+}
+
+resource "aws_sns_topic_subscription" "alarm_email" {
+  count     = var.alarm_email != null ? 1 : 0
+  topic_arn = aws_sns_topic.alarms[0].arn
+  protocol  = "email"
+  endpoint  = var.alarm_email
+}
+
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.project_name}-dashboard"
 
@@ -47,9 +69,9 @@ resource "aws_cloudwatch_dashboard" "main" {
         width  = 12
         height = 6
         properties = {
-          title   = "apod-fetcher: Duration (Comprehend + NASA API + writes)"
-          region  = var.aws_region
-          view    = "timeSeries"
+          title  = "apod-fetcher: Duration (Comprehend + NASA API + writes)"
+          region = var.aws_region
+          view   = "timeSeries"
           metrics = [
             ["AWS/Lambda", "Duration", "FunctionName", var.fetcher_function_name, { stat = "Average" }],
             ["AWS/Lambda", "Duration", "FunctionName", var.fetcher_function_name, { stat = "Maximum" }]
@@ -104,7 +126,9 @@ resource "aws_cloudwatch_metric_alarm" "fetcher_errors" {
   statistic           = "Sum"
   threshold           = 0
   alarm_description   = "apod-fetcher failed on its daily run"
-  treat_missing_data   = "notBreaching"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions
+  ok_actions          = local.alarm_actions
 
   dimensions = {
     FunctionName = var.fetcher_function_name
@@ -121,7 +145,9 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_write_errors" {
   statistic           = "Sum"
   threshold           = 0
   alarm_description   = "DynamoDB returned system errors on the archive table"
-  treat_missing_data   = "notBreaching"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions
+  ok_actions          = local.alarm_actions
 
   dimensions = {
     TableName = var.dynamodb_table_name

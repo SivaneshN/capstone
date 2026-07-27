@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASA Space Image Archive</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>NASA Space Image Archive &amp; Intelligent Tagger</h1>
+    <p class="subtitle">Daily APOD archive, enriched with AI-generated tags via Amazon Comprehend</p>
+  </header>
+
+  <main>
+    <section id="today" class="card">
+      <h2>Today's Picture</h2>
+      <div id="today-content" class="loading">Loading...</div>
+    </section>
+
+    <section id="search" class="card">
+      <h2>Search the Archive by Tag</h2>
+      <form id="search-form">
+        <input type="text" id="tag-input" placeholder="e.g. galaxy, nebula, Mars" autocomplete="off" required>
+        <button type="submit">Search</button>
+      </form>
+      <div id="search-results"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Team Error_404 · AWS Learner Lab · Terraform · Serverless</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -17,6 +17,12 @@ variable "lambda_invoke_arn" {
 resource "aws_apigatewayv2_api" "this" {
   name          = "${var.project_name}-api"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["GET"]
+    allow_headers = ["content-type"]
+  }
 }
 
 resource "aws_apigatewayv2_integration" "query_lambda" {

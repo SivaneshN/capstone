@@ -57,21 +57,21 @@ module "secrets_manager" {
 module "lambda_fetcher" {
   source = "./modules/lambda"
 
-  project_name             = var.project_name
-  function_role            = "fetcher"
-  source_dir               = "${path.module}/src/apod_fetcher"
-  handler                  = "handler.lambda_handler"
-  timeout                  = 30
-  memory_size              = 256
-  log_retention_days       = var.log_retention_days
+  project_name       = var.project_name
+  function_role      = "fetcher"
+  source_dir         = "${path.module}/src/apod_fetcher"
+  handler            = "handler.lambda_handler"
+  timeout            = 30
+  memory_size        = 256
+  log_retention_days = var.log_retention_days
 
   environment_variables = {
-    TABLE_NAME                = module.dynamodb.table_name
-    TAG_INDEX_TABLE_NAME       = module.dynamodb.tag_index_table_name
-    BUCKET_NAME                = module.s3.bucket_name
-    SECRET_ARN                 = module.secrets_manager.secret_arn
-    TAG_CONFIDENCE_THRESHOLD   = tostring(var.tag_confidence_threshold)
-    MAX_TAGS                   = tostring(var.max_tags)
+    TABLE_NAME               = module.dynamodb.table_name
+    TAG_INDEX_TABLE_NAME     = module.dynamodb.tag_index_table_name
+    BUCKET_NAME              = module.s3.bucket_name
+    SECRET_ARN               = module.secrets_manager.secret_arn
+    TAG_CONFIDENCE_THRESHOLD = tostring(var.tag_confidence_threshold)
+    MAX_TAGS                 = tostring(var.max_tags)
   }
 
   existing_role_arn = var.lab_role_arn
@@ -131,9 +131,9 @@ module "lambda_query" {
 # Schedule trigger: EventBridge -> apod-fetcher
 # ---------------------------------------------------------------------------
 module "eventbridge" {
-  source              = "./modules/eventbridge"
-  project_name        = var.project_name
-  schedule_cron       = var.schedule_cron
+  source               = "./modules/eventbridge"
+  project_name         = var.project_name
+  schedule_cron        = var.schedule_cron
   lambda_function_arn  = module.lambda_fetcher.function_arn
   lambda_function_name = module.lambda_fetcher.function_name
 }
@@ -142,21 +142,32 @@ module "eventbridge" {
 # External integration: API Gateway -> apod-query
 # ---------------------------------------------------------------------------
 module "api_gateway" {
-  source                = "./modules/api_gateway"
-  project_name          = var.project_name
-  lambda_function_arn   = module.lambda_query.function_arn
-  lambda_function_name  = module.lambda_query.function_name
-  lambda_invoke_arn      = module.lambda_query.invoke_arn
+  source               = "./modules/api_gateway"
+  project_name         = var.project_name
+  lambda_function_arn  = module.lambda_query.function_arn
+  lambda_function_name = module.lambda_query.function_name
+  lambda_invoke_arn    = module.lambda_query.invoke_arn
+}
+
+# ---------------------------------------------------------------------------
+# Frontend: static website (S3) that calls the apod-query API
+# ---------------------------------------------------------------------------
+module "website" {
+  source       = "./modules/website"
+  project_name = var.project_name
+  site_dir     = "${path.module}/site"
+  api_base_url = module.api_gateway.api_endpoint
 }
 
 # ---------------------------------------------------------------------------
 # Observability: CloudWatch dashboard + alarms
 # ---------------------------------------------------------------------------
 module "cloudwatch" {
-  source                    = "./modules/cloudwatch"
-  project_name              = var.project_name
-  aws_region                = var.aws_region
-  fetcher_function_name     = module.lambda_fetcher.function_name
-  query_function_name       = module.lambda_query.function_name
-  dynamodb_table_name       = module.dynamodb.table_name
+  source                = "./modules/cloudwatch"
+  project_name          = var.project_name
+  aws_region            = var.aws_region
+  fetcher_function_name = module.lambda_fetcher.function_name
+  query_function_name   = module.lambda_query.function_name
+  dynamodb_table_name   = module.dynamodb.table_name
+  alarm_email           = var.alarm_email
 }

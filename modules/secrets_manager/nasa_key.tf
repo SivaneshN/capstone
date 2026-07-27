@@ -13,7 +13,7 @@ resource "aws_secretsmanager_secret" "nasa_api_key" {
 }
 
 resource "aws_secretsmanager_secret_version" "nasa_api_key" {
-  secret_id     = aws_secretsmanager_secret.nasa_api_key.id
+  secret_id = aws_secretsmanager_secret.nasa_api_key.id
   secret_string = jsonencode({
     api_key = var.nasa_api_key
   })

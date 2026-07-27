@@ -5,12 +5,12 @@ output "api_base_url" {
 
 output "today_endpoint" {
   description = "Full URL for today's enriched record"
-  value       = "${module.api_gateway.api_endpoint}/today"
+  value       = "${trimsuffix(module.api_gateway.api_endpoint, "/")}/today"
 }
 
 output "search_endpoint_example" {
   description = "Example full URL for a tag search"
-  value       = "${module.api_gateway.api_endpoint}/search?tag=galaxy"
+  value       = "${trimsuffix(module.api_gateway.api_endpoint, "/")}/search?tag=galaxy"
 }
 
 output "dynamodb_table_name" {
@@ -23,6 +23,11 @@ output "s3_bucket_name" {
 
 output "secrets_manager_secret_name" {
   value = module.secrets_manager.secret_name
+}
+
+output "website_url" {
+  description = "Public URL of the static website (S3 static website hosting)"
+  value       = module.website.website_url
 }
 
 output "cloudwatch_dashboard_url" {

@@ -46,6 +46,12 @@ variable "log_retention_days" {
   default     = 14
 }
 
+variable "alarm_email" {
+  description = "Email address to notify when the daily fetch or DynamoDB alarms fire. Leave null to skip SNS wiring."
+  type        = string
+  default     = null
+}
+
 variable "lab_role_arn" {
   description = <<-EOT
     Optional. Set this to your AWS Academy / Learner Lab "LabRole" ARN
